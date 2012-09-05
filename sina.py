@@ -1,4 +1,3 @@
-#!/usr/bin/env pypy
 # -*- coding: utf-8 -*-
 
 from util import get_xml, Compiled, Download
