@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from util import get_xml, Compiled, Download
+from util import get_src, Compiled, Download
 
-def iask_download_by_id(video_id):
+def sina_download_by_id(video_id):
     xml_url = 'http://v.iask.com/v_play.php?vid=' + video_id
-    xml = get_xml(xml_url)
-    video_links = Compiled.iask_videos(xml)
+    xml = get_src(xml_url)
+    video_links = Compiled.sina_video_links(xml)
     Download.gets(video_links, merge=True)
 
 def sina(url):
-    raise NotImplementedError
+    html = get_src(url)
+    video_id = Compiled.sina_html2id(html)
+    sina_download_by_id(video_id)

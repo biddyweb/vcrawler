@@ -9,22 +9,21 @@ def main():
         sys.exit('... miss url')
     url = sys.argv[1]
 
-    # 判断视频网站 调用相应程序
+    # 判断视频网站 并 调用相应程序
     from util import Compiled
-    from bili import bilibili
+    from bili import bilibili, bili_one
     from qq import qq
     from sina import sina
 
     download = {
+        'bili_one': bili_one,
         'bili': bilibili,
         'qq': qq,
         'sina': sina,
     }
-    site = Compiled.website(url)
-    if site and download[site]:
-        download[site](url)
-    else:
-        sys.exit('... unsuppoeted url')
+
+    video_site = Compiled.website(url)
+    download[video_site](url)
 
 if __name__ == '__main__':
     main()

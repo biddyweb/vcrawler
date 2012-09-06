@@ -1,29 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from util import get_html, Compiled
-from sina import iask_download_by_id
+from util import get_src, Compiled
+from sina import sina_download_by_id
 from qq import qq_download_by_id
-from youku import youku_download_by_id
 
 def bili_one(url, html=None):
     if not html:
-        html = get_html(url)
+        html = get_src(url)
 
-    # 获取视频地址
-    siteid = Compiled.bili_siteid(html)
-    if not siteid:
-        print('... video not found')
-        return
-
+    # 获取视频来源
+    v_site, v_id = Compiled.bili_source(html)
     # 下载
-    if siteid.group(1) == 'vid':
-        iask_download_by_id(siteid.group(2))
-    elif siteid.group(1) =='ykid':
-        youku_download_by_id(siteid.group(2))
-    elif siteid.group(1) =='qid':
-        qq_download_by_id(siteid.group(2))
+    if v_site == 'vid':
+        sina_download_by_id(v_id)
+    elif v_site == 'cid':
+        qq_download_by_id(v_id)
     else:
-        raise NotImplementedError(siteid.group(1))
+        raise NotImplementedError(v_site + '=' +  v_id)
 
 
 def bili_all(pre, length):
@@ -36,10 +29,10 @@ def bili_all(pre, length):
 
 def bilibili(url):
     """分析页面，调用相应函数下载视频"""
-    html = get_html(url)
+    html = get_src(url)
     # 判断是单个视频还是视频列表
-    video_len = Compiled.bili_option(html)
-    if video_len:
-        bili_all(url, video_len)
+    length = Compiled.bili_list_len(html)
+    if length:
+        bili_all(url, length)
     else:
         bili_one(url, html)
