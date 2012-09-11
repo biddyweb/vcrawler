@@ -21,7 +21,6 @@ video crawler
 # usage
 ./get_video.py [url]
 
-
 #./get_video.py http://www.bilibili.tv/video/av26894/
 #./get_video.py http://www.bilibili.tv/video/av26894/index_2.html
 #./get_video.py http://v.qq.com/xxxxxxx
