@@ -42,28 +42,26 @@ def get_html(url):
 class Compiled(object):
     """预编译的正则及相关函数"""
 
-    # 视频网站判断
-    re_website = re.compile(
+    # bilibili 判断url是否完整 是否是单个视频
+    re_bili_url = re.compile(
         r'''(?ix)
-        https?://
-        (
-        (?P<bili_one> (www.bilibili.tv|bilibili.kankanews.com)/video/av\d+/index_\d+.html ) |
-        (?P<bili> (www.bilibili.tv|bilibili.kankanews.com)/video/av\d+/ ) |
-        (?P<qq> v.qq.com/\w+/\w/[a-z0-9.?=]+ ) |
-        (?P<sina> video.sina.com.cn/[-a-z0-9./]+ )
-        )
+        (?P<prefix>
+            https?://
+            (www.bilibili.tv | bilibili.kankanews.com)
+            /video/
+        )?
+        (?P<vid> av\d+) /?
+        (?P<list> index_\d+.html)?
         ''')
     @classmethod
-    def website(cls, url):
-        """返回视频网站"""
-        m = cls.re_website.match(url)
-        assert m, 'unsupported url '+url
-        site = None
-        if m.group('bili_one'): site = 'bili_one'
-        elif m.group('bili'): site = 'bili'
-        elif m.group('qq'): site = 'qq'
-        elif m.group('sina'): site = 'sina'
-        return site
+    def bili_url(cls, url):
+        m = cls.re_bili_url.match(url)
+        assert m, 'unsupported url'
+        if not m.group('prefix'):
+            url = 'http://www.bilibili.tv/video/' + url + '/'
+        if m.group('list'):
+            return (url, 'one')
+        return (url, 'all')
 
     # bilibili 判断是否为视频列表
     re_bili_list_len = re.compile(
@@ -83,7 +81,7 @@ class Compiled(object):
     # bilibili 获取视频原地址
     re_bili_source = re.compile(
         r'''(?ix)
-        (?: flashvars=" | src="https://secure.bilibili.tv/secure,)
+        (?: src="https://secure.bilibili.tv/secure, | flashvars=")
         (\w{1,2}id) = ([a-z0-9=]+) "
         ''')
     @classmethod
@@ -92,79 +90,18 @@ class Compiled(object):
         assert m, 'video not found'
         return m.group(1), m.group(2)
 
-    # sina 获取xml中的视频地址
-    re_sina_video_links = re.compile(
+    # bilibili 获取xml中的视频地址
+    re_bili_video_links = re.compile(
         r'''(?ix)
         <!\[CDATA\[
         (http://[a-z0-9./?=,&;%]+)
         \]\]>
         ''')
     @classmethod
-    def sina_video_links(cls, xml):
+    def bili_video_links(cls, xml):
         """返回视频地址列表"""
-        m = cls.re_iask_video_links.findall(xml)
+        m = cls.re_bili_video_links.findall(xml)
         return m
-
-    # sina 获取html中的视频id
-    re_sina_html2id = re.compile(
-        r'''(?ix)
-        ipad_vid:'(\d{8})',
-        ''')
-    @classmethod
-    def sina_html2id(cls, html):
-        """返回视频id"""
-        m = cls.re_sina_html2id.search(html)
-        assert m, 'video id not found'
-        return m.group(1)
-
-    # qq 判断视频地址是否含有视频id
-    re_qq_url2id = re.compile(
-        r'''(?ix)
-        http://v.qq.com/\w+/\w/[\w\d]+\.html\?vid=
-        ([a-z0-9]{11})
-        ''')
-    @classmethod
-    def qq_url2id(cls, url):
-        """返回url中的视频id"""
-        m = cls.re_qq_url2id.match(url)
-        if m:
-            return m.group(1)
-
-    # qq 从视频页面获取视频id
-    re_qq_html2id = re.compile(
-        r'''(?ix)
-        vid:" ([a-z0-9]{11}) "
-        ''')
-    @classmethod
-    def qq_html2id(cls, html):
-        """返回html中的视频id"""
-        m = cls.re_qq_html2id.search(html)
-        assert m, 'video id not found'
-        return m.group(1)
-
-    # qq 获取视频地址
-    re_qq_video_link = re.compile(
-        r'''(?ix)
-        http://video.store.qq.com/\d+/[a-z0-9.?=&;]+
-        ''')
-    @classmethod
-    def qq_video_link(cls, xml):
-        m = cls.re_qq_video_link.search(xml)
-        assert m, 'video not found'
-        return m.group()
-
-    # qq bilibili 下载地址
-    re_qq_bili_video_link = re.compile(
-        r'''(?ix)
-        <!\[CDATA\[
-        (http://[^\]]+)
-        \]\]>
-        ''')
-    @classmethod
-    def qq_bili_video_link(cls, xml):
-        m = cls.re_qq_bili_video_link.search(xml)
-        assert m, 'video not found'
-        return m.group(1)
 
 class Download(object):
     """下载视频"""
